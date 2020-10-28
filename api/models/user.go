@@ -9,8 +9,8 @@ import (
 // User struct
 type User struct {
 	ID        uuid.UUID `json:"id"`
-	Email     string    `json:"email"`
-	Passwords string    `json:"passwords"`
+	Email     string    `json:"email" validate:"required,email"`
+	Passwords string    `json:"passwords" validate:"required"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 }

@@ -73,11 +73,18 @@ func (userRepositories *userRepository) Update(user *models.User) error {
 func (userRepositories *userRepository) Delete(id uuid.UUID) error {
 	var err error
 
-	_, err = userRepositories.Sess.DeleteFrom("users").
+	result, err := userRepositories.Sess.DeleteFrom("users").
 		Where("id = ?", id.String()).
 		Exec()
 	if err != nil {
 		return err
+	}
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if rowsAffected == 0 {
+		return errors.New("User not found")
 	}
 	return nil
 }

@@ -5,6 +5,7 @@ import (
 	"strconv"
 
 	"github.com/muhammadisa/go-rest-boilerplate/api/utils"
+	uuid "github.com/satori/go.uuid"
 
 	"github.com/labstack/echo/v4"
 	"github.com/muhammadisa/go-rest-boilerplate/api/apps/user"
@@ -23,6 +24,7 @@ func NewUserDelivery(e *echo.Group, usecase user.Usecase) {
 	}
 	e.POST("/user/login/", delivery.Login)
 	e.POST("/user/register/", delivery.Register)
+	e.DELETE("/user/close/account/:id", delivery.CloseAccount)
 }
 
 var model = models.User{}
@@ -96,5 +98,32 @@ func (userDeliveries *UserDelivery) Register(c echo.Context) error {
 		StatusCode: http.StatusOK,
 		Message:    "Registered Successfully",
 		Data:       "Successfully registered",
+	})
+}
+
+// CloseAccount delete account permanently
+func (userDeliveries *UserDelivery) CloseAccount(c echo.Context) error {
+	var err error
+
+	userID, err := uuid.FromString(c.Param("id"))
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{
+			"status_code": strconv.Itoa(http.StatusBadRequest),
+			"message":     err.Error(),
+			"data":        "nil",
+		})
+	}
+	err = userDeliveries.userUsecase.Delete(userID)
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, map[string]string{
+			"status_code": strconv.Itoa(http.StatusBadRequest),
+			"message":     err.Error(),
+			"data":        "nil",
+		})
+	}
+	return c.JSON(http.StatusOK, utils.Responser{
+		StatusCode: http.StatusOK,
+		Message:    "User data deleted",
+		Data:       "OK",
 	})
 }
