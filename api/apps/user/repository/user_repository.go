@@ -42,12 +42,7 @@ func (userRepositories *userRepository) Login(user *models.User) (*models.User, 
 
 func (userRepositories *userRepository) Register(user *models.User) error {
 	var err error
-	// kontol := models.User{
-	// 	ID:        uuid.NewV4(),
-	// 	Passwords: "$2a$10$9e5Qfi1oz7H78r4QSqR5Cu6W2Oh8.2tXdXHQc10PoAD6OM4d0Ku5a",
-	// 	Email:     "asdasdasd@gmail.com",
-	// 	CreatedAt: time.Now(),
-	// }
+
 	_, err = userRepositories.Sess.InsertInto("users").
 		Columns("id", "email", "passwords", "created_at").
 		Record(user).
