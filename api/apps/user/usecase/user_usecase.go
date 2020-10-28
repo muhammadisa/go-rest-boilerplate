@@ -30,7 +30,10 @@ func (userUsecases userUsecase) Login(
 	error,
 ) {
 	selectedUser, authenticated, err := userUsecases.userRepository.Login(user)
-	err = auth.VerifyPassword(selectedUser.Password, user.Password)
+	if err != nil {
+		return nil, nil, err
+	}
+	err = auth.VerifyPassword(selectedUser.Passwords, user.Passwords)
 	if err != nil {
 		return nil, nil, errors.New("Email or Password is incorrect")
 	}
@@ -40,16 +43,17 @@ func (userUsecases userUsecase) Login(
 	}
 	authenticated.AccessToken = token
 	authenticated.RefreshToken = refresh
-	return user, authenticated, nil
+	return selectedUser, authenticated, nil
 }
 
 func (userUsecases userUsecase) Register(user *models.User) error {
-	hashedPassword, err := auth.HashPassword(user.Password)
+	hashedPassword, err := auth.HashPassword(user.Passwords)
 	if err != nil {
 		return err
 	}
 	user.ID = uuid.NewV4()
-	user.Password = string(hashedPassword)
+	user.Passwords = string(hashedPassword)
+	user.CreatedAt = time.Now()
 	err = userUsecases.userRepository.Register(user)
 	if err != nil {
 		return err
@@ -58,12 +62,12 @@ func (userUsecases userUsecase) Register(user *models.User) error {
 }
 
 func (userUsecases userUsecase) Update(user *models.User) error {
-	hashedPassword, err := auth.HashPassword(user.Password)
+	hashedPassword, err := auth.HashPassword(user.Passwords)
 	if err != nil {
 		return err
 	}
 	user.UpdatedAt = time.Now()
-	user.Password = string(hashedPassword)
+	user.Passwords = string(hashedPassword)
 	err = userUsecases.userRepository.Update(user)
 	if err != nil {
 		return err

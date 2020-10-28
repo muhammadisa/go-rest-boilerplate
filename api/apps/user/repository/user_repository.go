@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"errors"
 	"time"
 
 	uuid "github.com/satori/go.uuid"
@@ -26,10 +27,13 @@ func (userRepositories *userRepository) Login(user *models.User) (*models.User, 
 	var err error
 	var selectedUser *models.User
 
-	_, err = userRepositories.Sess.Select("*").
+	rowsAffected, err := userRepositories.Sess.Select("*").
 		From("users").
 		Where("email = ?", user.Email).
 		Load(&selectedUser)
+	if rowsAffected == 0 {
+		return nil, nil, errors.New("User not found")
+	}
 	if err != nil {
 		return nil, nil, err
 	}
@@ -38,10 +42,15 @@ func (userRepositories *userRepository) Login(user *models.User) (*models.User, 
 
 func (userRepositories *userRepository) Register(user *models.User) error {
 	var err error
-
+	// kontol := models.User{
+	// 	ID:        uuid.NewV4(),
+	// 	Passwords: "$2a$10$9e5Qfi1oz7H78r4QSqR5Cu6W2Oh8.2tXdXHQc10PoAD6OM4d0Ku5a",
+	// 	Email:     "asdasdasd@gmail.com",
+	// 	CreatedAt: time.Now(),
+	// }
 	_, err = userRepositories.Sess.InsertInto("users").
-		Columns("id", "email", "password", "created_at").
-		Record(&user).
+		Columns("id", "email", "passwords", "created_at").
+		Record(user).
 		Exec()
 	if err != nil {
 		return err
@@ -56,7 +65,7 @@ func (userRepositories *userRepository) Update(user *models.User) error {
 		Where("id = ?", user.ID.String()).
 		SetMap(map[string]interface{}{
 			"email":      user.Email,
-			"password":   user.Password,
+			"password":   user.Passwords,
 			"updated_at": time.Now(),
 		}).
 		Exec()

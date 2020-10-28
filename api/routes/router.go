@@ -6,6 +6,10 @@ import (
 	"net/http"
 	"strconv"
 
+	_userApi "github.com/muhammadisa/go-rest-boilerplate/api/apps/user/delivery"
+	_userRepo "github.com/muhammadisa/go-rest-boilerplate/api/apps/user/repository"
+	_userUsecase "github.com/muhammadisa/go-rest-boilerplate/api/apps/user/usecase"
+
 	"github.com/gocraft/dbr/v2"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -44,6 +48,7 @@ func (rc RouteConfigs) NewHTTPRoute() {
 	handler.setInitRoutes()
 
 	// Internal routers
+	handler.initUserRoutes()
 
 	// Starting Echo Server
 	log.Fatal(handler.Echo.Start(rc.Port))
@@ -51,7 +56,7 @@ func (rc RouteConfigs) NewHTTPRoute() {
 
 func (r *Routes) setupMiddleware(apiSecret string, origins []string) {
 	// main middleware
-	r.Echo.Use(middleware.Recover())
+	// r.Echo.Use(middleware.Recover())
 	r.Echo.Use(middleware.CORSWithConfig(middleware.CORSConfig{
 		AllowOrigins: origins,
 		AllowMethods: []string{
@@ -71,4 +76,11 @@ func (r *Routes) setInitRoutes() {
 			"message":     "Server is started",
 		})
 	})
+}
+
+// Create route initialization function here
+func (r *Routes) initUserRoutes() {
+	userRepo := _userRepo.NewUserRepository(r.Sess)
+	userUsecase := _userUsecase.NewUserUsecase(userRepo)
+	_userApi.NewUserDelivery(r.Group, userUsecase)
 }

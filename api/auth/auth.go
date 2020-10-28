@@ -21,13 +21,6 @@ type Authenticated struct {
 
 // HashPassword hashing password
 func HashPassword(password string) ([]byte, error) {
-	arr := []map[string]string{}
-	test := map[string]string{
-		"greeting": "hello",
-	}
-	asd := test["greeting"]
-	arr = append(arr, test)
-	fmt.Println(asd)
 	return bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 }
 
