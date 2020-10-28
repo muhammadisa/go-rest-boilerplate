@@ -10,6 +10,10 @@ import (
 	_userRepo "github.com/muhammadisa/go-rest-boilerplate/api/apps/user/repository"
 	_userUsecase "github.com/muhammadisa/go-rest-boilerplate/api/apps/user/usecase"
 
+	_foobarApi "github.com/muhammadisa/go-rest-boilerplate/api/apps/foobar/delivery"
+	_foobarRepo "github.com/muhammadisa/go-rest-boilerplate/api/apps/foobar/repository"
+	_foobarUsecase "github.com/muhammadisa/go-rest-boilerplate/api/apps/foobar/usecase"
+
 	"github.com/gocraft/dbr/v2"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -49,6 +53,7 @@ func (rc RouteConfigs) NewHTTPRoute() {
 
 	// Internal routers
 	handler.initUserRoutes()
+	handler.initFoobarRoutes()
 
 	// Starting Echo Server
 	log.Fatal(handler.Echo.Start(rc.Port))
@@ -83,4 +88,11 @@ func (r *Routes) initUserRoutes() {
 	userRepo := _userRepo.NewUserRepository(r.Sess)
 	userUsecase := _userUsecase.NewUserUsecase(userRepo)
 	_userApi.NewUserDelivery(r.Group, userUsecase)
+}
+
+// Create route initialization function here
+func (r *Routes) initFoobarRoutes() {
+	foobarRepo := _foobarRepo.NewFoobarRepository(r.Sess)
+	foobarUsecase := _foobarUsecase.NewFoobarUsecase(foobarRepo)
+	_foobarApi.NewFoobarDelivery(r.Group, foobarUsecase)
 }
