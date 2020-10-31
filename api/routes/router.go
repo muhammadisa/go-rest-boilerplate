@@ -65,7 +65,10 @@ func (rc RouteConfigs) NewHTTPRoute() {
 
 func (r *Routes) setupMiddleware(apiSecret string, origins []string) {
 	// main middleware
-	// r.Echo.Use(middleware.Recover())
+	r.Echo.Use(middleware.Recover())
+	r.Echo.Use(middleware.GzipWithConfig(middleware.GzipConfig{
+		Level: 5,
+	}))
 	r.Echo.Use(middleware.CORSWithConfig(middleware.CORSConfig{
 		AllowOrigins: origins,
 		AllowMethods: []string{

@@ -21,18 +21,25 @@ func NewFoobarRepository(sess *dbr.Session) foobar.Repository {
 	}
 }
 
-func (foobarRepositories *foobarRepository) Fetch() ([]models.Foobar, error) {
+func (foobarRepositories *foobarRepository) Fetch() (
+	[]models.Foobar,
+	error,
+) {
 	var err error
 	var foobars []models.Foobar
 
-	_, err = foobarRepositories.Sess.Select("*").From("foobars").Load(&foobars)
+	_, err = foobarRepositories.Sess.Select("*").
+		From("foobars").
+		Load(&foobars)
 	if err != nil {
 		return nil, err
 	}
 	return foobars, nil
 }
 
-func (foobarRepositories *foobarRepository) Create(foobar *models.Foobar) error {
+func (foobarRepositories *foobarRepository) Create(
+	foobar *models.Foobar,
+) error {
 	var err error
 
 	_, err = foobarRepositories.Sess.InsertInto("foobars").
@@ -45,7 +52,9 @@ func (foobarRepositories *foobarRepository) Create(foobar *models.Foobar) error 
 	return nil
 }
 
-func (foobarRepositories *foobarRepository) Update(foobar *models.Foobar) error {
+func (foobarRepositories *foobarRepository) Update(
+	foobar *models.Foobar,
+) error {
 	var err error
 
 	_, err = foobarRepositories.Sess.Update("foobars").

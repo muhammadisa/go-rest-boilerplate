@@ -23,7 +23,11 @@ func NewUserRepository(sess *dbr.Session) user.Repository {
 	}
 }
 
-func (userRepositories *userRepository) Login(user *models.User) (*models.User, *auth.Authenticated, error) {
+func (userRepositories *userRepository) Login(user *models.User) (
+	*models.User,
+	*auth.Authenticated,
+	error,
+) {
 	var err error
 	var selectedUser *models.User
 

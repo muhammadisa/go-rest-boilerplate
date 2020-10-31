@@ -21,16 +21,24 @@ type Authenticated struct {
 
 // HashPassword hashing password
 func HashPassword(password string) ([]byte, error) {
-	return bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	return bcrypt.GenerateFromPassword(
+		[]byte(password),
+		bcrypt.DefaultCost,
+	)
 }
 
 // VerifyPassword compare hashed password with password string
 func VerifyPassword(hashedPassword string, password string) error {
-	return bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(password))
+	return bcrypt.CompareHashAndPassword(
+		[]byte(hashedPassword),
+		[]byte(password),
+	)
 }
 
 // GenerateToken generate JWT token
-func GenerateToken(id uuid.UUID, additionalClaims jwt.MapClaims) (string, string, error) {
+func GenerateToken(id uuid.UUID, additionalClaims jwt.MapClaims) (
+	string, string, error,
+) {
 	apiSecret := []byte(os.Getenv("API_SECRET"))
 
 	// AccessToken
@@ -71,7 +79,10 @@ func JWTTokenValidate(c echo.Context) error {
 	}
 	token, err := jwt.Parse(tkn, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
+			return nil, fmt.Errorf(
+				"Unexpected signing method: %v",
+				token.Header["alg"],
+			)
 		}
 		return []byte(os.Getenv("API_SECRET")), nil
 	})

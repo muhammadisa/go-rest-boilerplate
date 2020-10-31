@@ -78,7 +78,7 @@ func (foobarUsecases foobarUsecase) Update(foobar *models.Foobar) error {
 		return err
 	}
 	close(fatalError)
-	return nil
+	return <-fatalError
 }
 
 func (foobarUsecases foobarUsecase) Delete(id uuid.UUID) error {
