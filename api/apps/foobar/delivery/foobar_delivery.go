@@ -34,6 +34,15 @@ var model = models.Foobar{}
 func (foobarDeliveries *FoobarDelivery) Fetch(c echo.Context) error {
 	var err error
 
+	// err = auth.JWTTokenValidate(c)
+	// if err != nil {
+	// 	return c.JSON(http.StatusUnprocessableEntity, utils.Responser{
+	// 		StatusCode: http.StatusUnprocessableEntity,
+	// 		Message:    err.Error(),
+	// 		Data:       nil,
+	// 	})
+	// }
+
 	foobars, err := foobarDeliveries.foobarUsecase.Fetch()
 	if err != nil {
 		return c.JSON(http.StatusUnprocessableEntity, map[string]string{

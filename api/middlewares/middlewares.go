@@ -27,6 +27,7 @@ func (m *Middlewares) JWT(next echo.HandlerFunc) echo.HandlerFunc {
 		if err != nil {
 			c.JSON(http.StatusUnauthorized, map[string]string{
 				"status_code": strconv.Itoa(http.StatusUnauthorized),
+				"reason":      err.Error(),
 				"message":     "Unauthorized",
 			})
 			return nil

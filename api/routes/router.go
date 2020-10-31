@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/muhammadisa/go-rest-boilerplate/api/middlewares"
+
 	_userApi "github.com/muhammadisa/go-rest-boilerplate/api/apps/user/delivery"
 	_userRepo "github.com/muhammadisa/go-rest-boilerplate/api/apps/user/repository"
 	_userUsecase "github.com/muhammadisa/go-rest-boilerplate/api/apps/user/usecase"
@@ -25,7 +27,8 @@ import (
 // Routes struct
 type Routes struct {
 	Echo         *echo.Echo
-	Group        *echo.Group
+	RestGroup    *echo.Group
+	AuthGroup    *echo.Group
 	CacheCommand *goredisku.GoRedisKu
 	Sess         *dbr.Session
 }
@@ -45,13 +48,16 @@ type RouteConfigs struct {
 func (rc RouteConfigs) NewHTTPRoute() {
 	// Initialize route configs
 	restful := rc.EchoData.Group(fmt.Sprintf("api/%s", rc.Version))
+	auth := rc.EchoData.Group(fmt.Sprintf("api/auth/%s", rc.Version))
 	handler := &Routes{
 		Echo:         rc.EchoData,
-		Group:        restful,
+		RestGroup:    restful,
+		AuthGroup:    auth,
 		CacheCommand: rc.CacheCommand,
 		Sess:         rc.Sess,
 	}
-	handler.Echo.Validator = &customValidator.CustomValidator{Validator: validator.New()}
+	handler.Echo.Validator = &customValidator.
+		CustomValidator{Validator: validator.New()}
 	handler.setupMiddleware(rc.APISecret, rc.Origins)
 	handler.setInitRoutes()
 
@@ -65,6 +71,8 @@ func (rc RouteConfigs) NewHTTPRoute() {
 
 func (r *Routes) setupMiddleware(apiSecret string, origins []string) {
 	// main middleware
+	r.RestGroup.Use(middlewares.InitMiddleware().JWT)
+	r.Echo.Use(middlewares.InitMiddleware().CORS)
 	r.Echo.Use(middleware.Recover())
 	r.Echo.Use(middleware.GzipWithConfig(middleware.GzipConfig{
 		Level: 5,
@@ -94,12 +102,12 @@ func (r *Routes) setInitRoutes() {
 func (r *Routes) initUserRoutes() {
 	userRepo := _userRepo.NewUserRepository(r.Sess)
 	userUsecase := _userUsecase.NewUserUsecase(userRepo)
-	_userApi.NewUserDelivery(r.Group, userUsecase)
+	_userApi.NewUserDelivery(r.AuthGroup, userUsecase)
 }
 
 // Create route initialization function here
 func (r *Routes) initFoobarRoutes() {
 	foobarRepo := _foobarRepo.NewFoobarRepository(r.Sess)
 	foobarUsecase := _foobarUsecase.NewFoobarUsecase(foobarRepo, r.CacheCommand)
-	_foobarApi.NewFoobarDelivery(r.Group, foobarUsecase)
+	_foobarApi.NewFoobarDelivery(r.RestGroup, foobarUsecase)
 }
