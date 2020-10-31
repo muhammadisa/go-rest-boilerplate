@@ -9,6 +9,7 @@ import (
 	_userApi "github.com/muhammadisa/go-rest-boilerplate/api/apps/user/delivery"
 	_userRepo "github.com/muhammadisa/go-rest-boilerplate/api/apps/user/repository"
 	_userUsecase "github.com/muhammadisa/go-rest-boilerplate/api/apps/user/usecase"
+	"github.com/muhammadisa/goredisku"
 
 	_foobarApi "github.com/muhammadisa/go-rest-boilerplate/api/apps/foobar/delivery"
 	_foobarRepo "github.com/muhammadisa/go-rest-boilerplate/api/apps/foobar/repository"
@@ -23,19 +24,21 @@ import (
 
 // Routes struct
 type Routes struct {
-	Echo  *echo.Echo
-	Group *echo.Group
-	Sess  *dbr.Session
+	Echo         *echo.Echo
+	Group        *echo.Group
+	CacheCommand *goredisku.GoRedisKu
+	Sess         *dbr.Session
 }
 
 // RouteConfigs struct
 type RouteConfigs struct {
-	EchoData  *echo.Echo
-	Sess      *dbr.Session
-	APISecret string
-	Version   string
-	Port      string
-	Origins   []string
+	EchoData     *echo.Echo
+	Sess         *dbr.Session
+	CacheCommand *goredisku.GoRedisKu
+	APISecret    string
+	Version      string
+	Port         string
+	Origins      []string
 }
 
 // NewHTTPRoute echo route initialization
@@ -43,9 +46,10 @@ func (rc RouteConfigs) NewHTTPRoute() {
 	// Initialize route configs
 	restful := rc.EchoData.Group(fmt.Sprintf("api/%s", rc.Version))
 	handler := &Routes{
-		Echo:  rc.EchoData,
-		Group: restful,
-		Sess:  rc.Sess,
+		Echo:         rc.EchoData,
+		Group:        restful,
+		CacheCommand: rc.CacheCommand,
+		Sess:         rc.Sess,
 	}
 	handler.Echo.Validator = &customValidator.CustomValidator{Validator: validator.New()}
 	handler.setupMiddleware(rc.APISecret, rc.Origins)
@@ -93,6 +97,6 @@ func (r *Routes) initUserRoutes() {
 // Create route initialization function here
 func (r *Routes) initFoobarRoutes() {
 	foobarRepo := _foobarRepo.NewFoobarRepository(r.Sess)
-	foobarUsecase := _foobarUsecase.NewFoobarUsecase(foobarRepo)
+	foobarUsecase := _foobarUsecase.NewFoobarUsecase(foobarRepo, r.CacheCommand)
 	_foobarApi.NewFoobarDelivery(r.Group, foobarUsecase)
 }

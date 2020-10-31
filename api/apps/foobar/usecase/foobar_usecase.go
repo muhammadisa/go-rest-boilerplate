@@ -1,7 +1,11 @@
 package usecase
 
 import (
+	"fmt"
+	"sync"
 	"time"
+
+	"github.com/muhammadisa/goredisku"
 
 	"github.com/muhammadisa/go-rest-boilerplate/api/apps/foobar"
 	"github.com/muhammadisa/go-rest-boilerplate/api/models"
@@ -10,12 +14,17 @@ import (
 
 type foobarUsecase struct {
 	foobarRepository foobar.Repository
+	cacheCommand     *goredisku.GoRedisKu
 }
 
 // NewFoobarUsecase function
-func NewFoobarUsecase(foobarRepository foobar.Repository) foobar.Usecase {
+func NewFoobarUsecase(
+	foobarRepository foobar.Repository,
+	cacheCommand *goredisku.GoRedisKu,
+) foobar.Usecase {
 	return &foobarUsecase{
 		foobarRepository: foobarRepository,
+		cacheCommand:     cacheCommand,
 	}
 }
 
@@ -28,24 +37,52 @@ func (foobarUsecases foobarUsecase) Fetch() ([]models.Foobar, error) {
 }
 
 func (foobarUsecases foobarUsecase) Create(foobar *models.Foobar) error {
+	fatalError := make(chan error, 1)
+
 	foobar.ID = uuid.NewV4()
 	foobar.CreatedAt = time.Now()
-	err := foobarUsecases.foobarRepository.Create(foobar)
+	key := fmt.Sprintf("%s:%s", foobar.ID.String(), "foobar")
+	err := foobarUsecases.cacheCommand.WT(key, &foobar, func() {
+		fmt.Println("Write Through db event")
+		err := foobarUsecases.foobarRepository.Create(foobar)
+		if err != nil {
+			fatalError <- err
+		}
+	})
 	if err != nil {
 		return err
 	}
-	return nil
+	close(fatalError)
+	return <-fatalError
 }
 
 func (foobarUsecases foobarUsecase) Update(foobar *models.Foobar) error {
+	fatalError := make(chan error, 1)
+
 	foobar.UpdatedAt = time.Now()
-	err := foobarUsecases.foobarRepository.Update(foobar)
+	key := fmt.Sprintf("%s:%s", foobar.ID.String(), "foobar")
+	err := foobarUsecases.cacheCommand.WB(key, &foobar, func(
+		wg *sync.WaitGroup,
+		mtx *sync.Mutex,
+	) {
+		mtx.Lock()
+		fmt.Println("Write Back db event")
+		err := foobarUsecases.foobarRepository.Update(foobar)
+		if err != nil {
+			fatalError <- err
+		}
+		mtx.Unlock()
+		wg.Done()
+	})
 	if err != nil {
 		return err
 	}
+	close(fatalError)
 	return nil
 }
 
 func (foobarUsecases foobarUsecase) Delete(id uuid.UUID) error {
+	key := fmt.Sprintf("%s:%s", id.String(), "foobar")
+	foobarUsecases.cacheCommand.Del(key)
 	return foobarUsecases.foobarRepository.Delete(id)
 }
